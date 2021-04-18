@@ -1,0 +1,20 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+schedules:
+- cron: '30 * * * *'
+  displayName: Every hour
+  branches:
+    include:
+    - master
+  always: true
+pool:
+  vmImage: windows-latest
+resources:
+  repositories:
+  - repository: Templates
+    type: github
+    name: simeoncloud/AzurePipelineTemplates
+    ref: refs/heads/feature/moveRetryAndSummary 
+    endpoint: simeoncloud
+steps:
+- template: RetryPipelines.yml@Templates

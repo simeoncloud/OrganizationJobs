@@ -1,0 +1,25 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+schedules:
+- cron: '0 8 * * *'
+  displayName: Daily Run 8AM UTC
+  branches:
+    include:
+    - master
+  always: true
+pool:
+  vmImage: windows-latest
+resources:
+  repositories:
+  - repository: Reporting
+    type: github
+    name: simeoncloud/Reporting
+    ref: refs/heads/main
+    endpoint: simeoncloud
+  - repository: Templates
+    type: github
+    name: simeoncloud/AzurePipelineTemplates
+    ref: refs/heads/feature/moveRetryAndSummary 
+    endpoint: simeoncloud
+steps:
+- template: SummaryEmail.yml@Templates
