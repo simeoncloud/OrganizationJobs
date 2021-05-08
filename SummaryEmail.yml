@@ -19,7 +19,7 @@ resources:
   - repository: Templates
     type: github
     name: simeoncloud/AzurePipelineTemplates
-    ref: refs/heads/feature/moveRetryAndSummary 
+    ref: refs/heads/preview
     endpoint: simeoncloud
 steps:
 - template: SummaryEmail.yml@Templates
