@@ -14,7 +14,7 @@ resources:
   - repository: Templates
     type: github
     name: simeoncloud/AzurePipelineTemplates
-    ref: refs/heads/preview 
+    ref: refs/heads/master 
     endpoint: simeoncloud
 steps:
 - template: RetryPipelines.yml@Templates
