@@ -21,5 +21,7 @@ resources:
     name: simeoncloud/AzurePipelineTemplates
     ref: refs/heads/master
     endpoint: simeoncloud
-steps:
-- template: SummaryEmail.yml@Templates
+jobs:
+- timeoutInMinutes: 10
+  steps:
+  - template: SummaryEmail.yml@Templates
