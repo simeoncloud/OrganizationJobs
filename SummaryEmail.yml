@@ -22,6 +22,7 @@ resources:
     ref: refs/heads/master
     endpoint: simeoncloud
 jobs:
-- timeoutInMinutes: 10
+- job: job
+  timeoutInMinutes: 5
   steps:
   - template: SummaryEmail.yml@Templates
