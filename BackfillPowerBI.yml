@@ -1,0 +1,32 @@
+parameters:
+- name: DeleteAllOrganizationData
+  displayName: Delete all data in Power BI Simeon Data source
+  default: false
+  type: boolean
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+schedules:
+- cron: '0 8 * * *'
+  displayName: Daily Run 8AM UTC
+  branches:
+    include:
+    - master
+  always: true
+pool:
+  vmImage: windows-latest
+resources:
+  repositories:
+  - repository: Templates
+    type: github
+    name: simeoncloud/AzurePipelineTemplates
+    ref: refs/heads/feature/uploadResultsToPowerBI
+    endpoint: simeoncloud
+jobs:
+- job: Job
+  timeoutInMinutes: 10
+  steps:
+  - template: Reporting.yml@Templates
+    parameters: 
+      Name: Backfill
+      DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
