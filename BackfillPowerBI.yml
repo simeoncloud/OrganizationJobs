@@ -4,24 +4,55 @@ parameters:
   default: false
   type: boolean
 
+- name: BackfillHours
+  displayName: Number of hours to include in backfill
+  default: 72
+  type: number
+
 name: $(Date:yyyyMMdd)$(Rev:.r)
 trigger: none
 pool:
   vmImage: windows-latest
 resources:
   repositories:
-  - repository: Templates
+  - repository: Reporting
     type: github
-    name: simeoncloud/AzurePipelineTemplates
-    ref: refs/heads/feature/uploadResultsToPowerBI
+    name: simeoncloud/reporting
+    ref: refs/heads/feature/uploadToPowerBI
     endpoint: simeoncloud
 jobs:
 - job: Job
   timeoutInMinutes: 60
   steps:
-  - checkout: Templates
-  - template: Reporting.yml@Templates
-    parameters: 
-      Name: Backfill
-      DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
-      PlanFile: ' '
+  - checkout: Reporting
+
+  - pwsh: 
+      (Get-ChildItem -Filter 'Invoke-UploadPlanToPowerBI.ps1' -Recurse)[0].FullName | Import-Module -Force;
+      Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $env:Secret -Tenant $env:Tenant;
+      Clear-PowerBITable;
+    condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
+    name: ClearPowerBITable
+    displayName: Clear all data from PowerBI
+    env:
+      AppId: $(AppId)
+      Secret: $(Secret)
+      Tenant: $(Tenant)
+
+  - pwsh: |
+      try {
+          (Get-ChildItem -Filter 'Invoke-UploadPlanToPowerBI.ps1' -Recurse)[0].FullName | Import-Module -Force
+          Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $env:Secret -Tenant $env:Tenant
+          Invoke-SimeonCloudReportingBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $env:PersonalAccessToken -BackfillHours $env:BackfillHours
+      } catch {
+          Write-Error "There was an error"
+          Write-Error -ErrorRecord $_ -EA Continue
+          Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
+      }
+    name: Backfill
+    displayName: Backfill PowerBI
+    env:
+      PersonalAccessToken: $(System.AccessToken)
+      BackfillHours: ${{ parameters.BackfillHours }}
+      AppId: $(AppId)
+      Secret: $(Secret)
+      Tenant: $(Tenant)
