@@ -22,13 +22,13 @@ resources:
     endpoint: simeoncloud
 jobs:
 - job: Job
-  timeoutInMinutes: 60
+  timeoutInMinutes: 180
   steps:
   - checkout: Reporting
 
   - pwsh: 
       (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $(Secret) -Tenant $env:Tenant;
+      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret $(PowerBIAppSecret) -Tenant $env:PowerBITenant;
       Clear-PowerBITable;
     condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
     name: ClearPowerBITable
@@ -39,7 +39,7 @@ jobs:
   - pwsh: |
       try {
           (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force
-          Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $(Secret) -Tenant $env:Tenant
+          Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret $(PowerBIAppSecret) -Tenant $env:PowerBITenant
           Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
       } catch {
           Write-Error -ErrorRecord $_ -EA Continue
