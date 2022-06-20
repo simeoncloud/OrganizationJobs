@@ -44,7 +44,7 @@ jobs:
       } catch {
           Write-Error -ErrorRecord $_ -EA Continue
           Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
-          Write-Error "There was an error"
+          Write-Error "An error occurred running the backfill."
       }
     name: Backfill
     displayName: Backfill PowerBI
