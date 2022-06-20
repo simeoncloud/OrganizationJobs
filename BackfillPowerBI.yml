@@ -27,32 +27,24 @@ jobs:
   - checkout: Reporting
 
   - pwsh: 
-      (Get-ChildItem -Filter 'Invoke-UploadPlanToPowerBI.ps1' -Recurse)[0].FullName | Import-Module -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $env:Secret -Tenant $env:Tenant;
+      (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force;
+      Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $(Secret) -Tenant $env:Tenant;
       Clear-PowerBITable;
     condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
     name: ClearPowerBITable
     displayName: Clear all data from PowerBI
     env:
-      AppId: $(AppId)
       Secret: $(Secret)
-      Tenant: $(Tenant)
 
   - pwsh: |
       try {
-          (Get-ChildItem -Filter 'Invoke-UploadPlanToPowerBI.ps1' -Recurse)[0].FullName | Import-Module -Force
-          Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $env:Secret -Tenant $env:Tenant
-          Invoke-SimeonCloudReportingBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $env:PersonalAccessToken -BackfillHours $env:BackfillHours
+          (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force
+          Connect-PowerBIAsServicePrincipal -AppId $env:AppId -AppSecret $(Secret) -Tenant $env:Tenant
+          Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
       } catch {
-          Write-Error "There was an error"
           Write-Error -ErrorRecord $_ -EA Continue
           Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
+          Write-Error "There was an error"
       }
     name: Backfill
     displayName: Backfill PowerBI
-    env:
-      PersonalAccessToken: $(System.AccessToken)
-      BackfillHours: ${{ parameters.BackfillHours }}
-      AppId: $(AppId)
-      Secret: $(Secret)
-      Tenant: $(Tenant)
