@@ -22,7 +22,7 @@ resources:
     endpoint: simeoncloud
 jobs:
 - job: Job
-  timeoutInMinutes: 60
+  timeoutInMinutes: 600
   steps:
   - checkout: Reporting
 
