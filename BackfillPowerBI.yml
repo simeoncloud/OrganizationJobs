@@ -1,0 +1,48 @@
+parameters:
+- name: DeleteAllOrganizationData
+  displayName: Delete all data in Power BI Simeon Data source
+  default: false
+  type: boolean
+
+- name: BackfillHours
+  displayName: Number of hours to include in backfill
+  default: 72
+  type: number
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+pool:
+  vmImage: windows-latest
+resources:
+  repositories:
+  - repository: Reporting
+    type: github
+    name: simeoncloud/reporting
+    ref: refs/heads/feature/uploadToPowerBI
+    endpoint: simeoncloud
+jobs:
+- job: Job
+  timeoutInMinutes: 600
+  steps:
+  - checkout: Reporting
+
+  - pwsh: 
+      (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force;
+      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
+      Clear-PowerBITable;
+    condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
+    name: ClearPowerBITable
+    displayName: Clear all data from PowerBI
+
+  - pwsh: |
+      try {
+          (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force
+          Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant
+          Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
+      } catch {
+          Write-Error -ErrorRecord $_ -EA Continue
+          Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
+          Write-Error "An error occurred running the backfill."
+      }
+    name: Backfill
+    displayName: Backfill PowerBI
