@@ -33,8 +33,6 @@ jobs:
     condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
     name: ClearPowerBITable
     displayName: Clear all data from PowerBI
-    env:
-      Secret: $(Secret)
 
   - pwsh: |
       try {
