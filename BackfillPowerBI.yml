@@ -10,8 +10,8 @@ parameters:
   type: boolean
 
 - name: InstallPowerBIReport
-  displayName: Install the Power BI report, delete existing report
-  default: false
+  displayName: Install or reinstall the Power BI report
+  default: true
   type: boolean
 
 - name: BackfillHours
@@ -39,7 +39,7 @@ jobs:
   - checkout: Reporting
   
   - pwsh: 
-      Get-ChildItem -Path .\SimeonSyncPowerBI -Filter "*.psm1" -Recurse | Import-Module -Force;
+      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
       Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
       Install-SimeonSyncTable;
     condition: and(succeeded(), ${{ parameters.UpdatePowerBIDatasetTableSchema }})
@@ -47,7 +47,7 @@ jobs:
     displayName: Update dataset table schema
   
   - pwsh: 
-      Get-ChildItem -Path .\SimeonSyncPowerBI -Filter "*.psm1" -Recurse | Import-Module -Force;
+      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
       Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
       Clear-PowerBITable;
     condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
@@ -55,7 +55,7 @@ jobs:
     displayName: Clear all data from PowerBI
 
   - pwsh: 
-      Get-ChildItem -Path .\SimeonSyncPowerBI -Filter "*.psm1" -Recurse | Import-Module -Force;
+      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
       Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
       Install-SimeonSyncReport -PowerBIReportFilePath '.\SimeonSyncPowerBI\Baseline Compliance Report.pbix' -PowerBIDataSourceModelId $env:PowerBIDataSourceModelId;
     condition: and(succeeded(), ${{ parameters.InstallPowerBIReport }})
@@ -64,7 +64,7 @@ jobs:
     
   - pwsh: |
       try {
-          Get-ChildItem -Path .\SimeonSyncPowerBI -Filter "*.psm1" -Recurse | Import-Module -Force;
+          Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
           Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant
           Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
       } catch {
