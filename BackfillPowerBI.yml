@@ -27,7 +27,7 @@ pool:
   vmImage: windows-latest
 resources:
   repositories:
-    - repository: Templates
+  - repository: Templates
     type: github
     name: simeoncloud/AzurePipelineTemplates
     ref: refs/heads/feature/SD-929
@@ -42,3 +42,8 @@ jobs:
   timeoutInMinutes: 600
   steps:
   - template: BackfillPowerBI.yml@Templates
+    parameters:
+      UpdatePowerBIDatasetTableSchema: ${{ parameters.UpdatePowerBIDatasetTableSchema }}
+      DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
+      InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
+      BackfillHours: ${{ parameters.BackfillHours }}
