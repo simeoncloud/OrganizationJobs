@@ -5,7 +5,7 @@ parameters:
   type: boolean
 
 - name: DeleteAllOrganizationData
-  displayName: Delete all data in Power BI Simeon Data source
+  displayName: Delete all data in the Simeon Power BI dataset
   default: true
   type: boolean
 
@@ -27,6 +27,11 @@ pool:
   vmImage: windows-latest
 resources:
   repositories:
+    - repository: Templates
+    type: github
+    name: simeoncloud/AzurePipelineTemplates
+    ref: refs/heads/feature/SD-929
+    endpoint: simeoncloud
   - repository: Reporting
     type: github
     name: simeoncloud/reporting
@@ -36,49 +41,4 @@ jobs:
 - job: Job
   timeoutInMinutes: 600
   steps:
-  - checkout: Reporting
-  
-  - pwsh: 
-      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
-      Install-SimeonSyncTable;
-    condition: and(succeeded(), ${{ parameters.UpdatePowerBIDatasetTableSchema }})
-    name: UpdateDatasetTableSchema
-    displayName: Update dataset table schema
-  
-  - pwsh: 
-      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
-      Clear-PowerBITable;
-    condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
-    name: ClearPowerBITable
-    displayName: Clear all data from PowerBI
-
-  - pwsh: 
-      Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
-      Install-SimeonSyncReport -PowerBIReportFilePath '.\SimeonSyncPowerBI\Baseline Compliance Report.pbix' -PowerBIDataSourceModelId $env:PowerBIDataSourceModelId;
-    condition: and(succeeded(), ${{ parameters.InstallPowerBIReport }})
-    name: InstallPowerBIReport
-    displayName: Install Power BI Report
-    
-  - pwsh: |
-      try {
-          Import-Module .\SimeonSyncPowerBI\SimeonSyncPowerBIInstallation.psm1 -Force;
-          Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant
-          Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
-      } catch {
-          Write-Error -ErrorRecord $_ -EA Continue
-          Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
-          Write-Error "An error occurred running the backfill."
-      }
-    name: Backfill
-    displayName: Backfill PowerBI
-
-  - task: PublishPipelineArtifact@1
-    displayName: Publish sources
-    condition: always()
-    continueOnError: true
-    inputs:
-      targetPath: $(Build.SourcesDirectory)
-      artifactName: Sources
+  - template: BackfillPowerBI.yml@Templates
