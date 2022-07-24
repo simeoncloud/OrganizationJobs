@@ -1,7 +1,17 @@
 parameters:
+- name: UpdatePowerBIDatasetTableSchema
+  displayName: Update the Power BI Table schema to the latest schema
+  default: true
+  type: boolean
+
 - name: DeleteAllOrganizationData
-  displayName: Delete all data in Power BI Simeon Data source
-  default: false
+  displayName: Delete all data in the Simeon Power BI dataset
+  default: true
+  type: boolean
+
+- name: InstallPowerBIReport
+  displayName: Install or reinstall the Power BI report
+  default: true
   type: boolean
 
 - name: BackfillHours
@@ -9,40 +19,31 @@ parameters:
   default: 72
   type: number
 
+variables:
+- group: Sync
 name: $(Date:yyyyMMdd)$(Rev:.r)
 trigger: none
 pool:
   vmImage: windows-latest
 resources:
   repositories:
+  - repository: Templates
+    type: github
+    name: simeoncloud/AzurePipelineTemplates
+    ref: refs/heads/feature/SD-929
+    endpoint: simeoncloud
   - repository: Reporting
     type: github
     name: simeoncloud/reporting
-    ref: refs/heads/feature/uploadToPowerBI
+    ref: refs/heads/feature/installReport
     endpoint: simeoncloud
 jobs:
 - job: Job
   timeoutInMinutes: 600
   steps:
-  - checkout: Reporting
-
-  - pwsh: 
-      (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force;
-      Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant;
-      Clear-PowerBITable;
-    condition: and(succeeded(), ${{ parameters.DeleteAllOrganizationData }})
-    name: ClearPowerBITable
-    displayName: Clear all data from PowerBI
-
-  - pwsh: |
-      try {
-          (Get-ChildItem -Filter 'SimeonSyncPowerBI.psm1' -Recurse)[0].FullName | Import-Module -Force
-          Connect-PowerBIAsServicePrincipal -AppId $env:PowerBIAppId -AppSecret (ConvertTo-SecureString $(PowerBIAppSecret) -AsPlainText -Force) -Tenant $env:PowerBITenant
-          Invoke-SimeonSyncPowerBIBackfill -OrganizationUri "$(System.CollectionUri)" -PersonalAccessToken $(System.AccessToken) -BackfillHours ${{ parameters.BackfillHours }}
-      } catch {
-          Write-Error -ErrorRecord $_ -EA Continue
-          Write-Error -ErrorRecord (Resolve-PowerBIError -Last) -EA Continue
-          Write-Error "An error occurred running the backfill."
-      }
-    name: Backfill
-    displayName: Backfill PowerBI
+  - template: BackfillPowerBI.yml@Templates
+    parameters:
+      UpdatePowerBIDatasetTableSchema: ${{ parameters.UpdatePowerBIDatasetTableSchema }}
+      DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
+      InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
+      BackfillHours: ${{ parameters.BackfillHours }}
