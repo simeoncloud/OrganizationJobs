@@ -14,9 +14,19 @@ parameters:
   default: true
   type: boolean
 
+- name: BackfillOnlyFailedUploadToPowerBISteps
+  displayName: Backfill only failed upload to Power BI steps
+  default: false
+  type: boolean
+
 - name: BackfillHours
   displayName: Number of hours to include in backfill
   default: 72
+  type: number
+
+- name: NumberOfParallelPipelinesToBackfill
+  displayName: Number of parallel pipelines to backfill
+  default: 1
   type: number
 
 variables:
@@ -30,7 +40,7 @@ resources:
   - repository: Templates
     type: github
     name: simeoncloud/AzurePipelineTemplates
-    ref: refs/heads/feature/SD-929
+    ref: refs/heads/feature/SD-199
     endpoint: simeoncloud
   - repository: Reporting
     type: github
@@ -46,4 +56,6 @@ jobs:
       UpdatePowerBIDatasetTableSchema: ${{ parameters.UpdatePowerBIDatasetTableSchema }}
       DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
       InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
+      BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.InstallPowerBIReport }}
       BackfillHours: ${{ parameters.BackfillHours }}
+      NumberOfParallelPipelinesToBackfill:  ${{ parameters.NumberOfParallelPipelinesToBackfill }}
