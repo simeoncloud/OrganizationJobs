@@ -56,6 +56,6 @@ jobs:
       UpdatePowerBIDatasetTableSchema: ${{ parameters.UpdatePowerBIDatasetTableSchema }}
       DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
       InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
-      BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.InstallPowerBIReport }}
+      BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.BackfillOnlyFailedUploadToPowerBISteps }}
       BackfillHours: ${{ parameters.BackfillHours }}
       NumberOfParallelPipelinesToBackfill:  ${{ parameters.NumberOfParallelPipelinesToBackfill }}
