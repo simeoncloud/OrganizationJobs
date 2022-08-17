@@ -10,7 +10,7 @@ parameters:
   type: boolean
 
 - name: InstallPowerBIReport
-  displayName: Install or reinstall the Power BI report
+  displayName: Install or reinstall Simeon Power BI report(s)
   default: true
   type: boolean
 
