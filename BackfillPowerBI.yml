@@ -1,16 +1,6 @@
 parameters:
-- name: UpdatePowerBIDatasetTableSchema
-  displayName: Update the Power BI Table schema to the latest schema
-  default: true
-  type: boolean
-
 - name: DeleteAllOrganizationData
   displayName: Delete all data in the Simeon Power BI dataset
-  default: true
-  type: boolean
-
-- name: InstallPowerBIReport
-  displayName: Install or reinstall Simeon Power BI report(s)
   default: true
   type: boolean
 
@@ -44,7 +34,7 @@ resources:
     endpoint: simeoncloud
   - repository: Reporting
     type: github
-    name: simeoncloud/reporting
+    name: simeoncloud/feature/SD-199
     ref: refs/heads/feature/installReport
     endpoint: simeoncloud
 jobs:
@@ -53,9 +43,7 @@ jobs:
   steps:
   - template: BackfillPowerBI.yml@Templates
     parameters:
-      UpdatePowerBIDatasetTableSchema: ${{ parameters.UpdatePowerBIDatasetTableSchema }}
       DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
-      InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
       BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.BackfillOnlyFailedUploadToPowerBISteps }}
       BackfillHours: ${{ parameters.BackfillHours }}
       NumberOfParallelPipelinesToBackfill:  ${{ parameters.NumberOfParallelPipelinesToBackfill }}
