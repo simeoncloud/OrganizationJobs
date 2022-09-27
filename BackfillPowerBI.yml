@@ -26,7 +26,7 @@ parameters:
 
 - name: NumberOfParallelPipelinesToBackfill
   displayName: Number of parallel pipelines to backfill
-  default: 15
+  default: 5
   type: number
 
 variables:
