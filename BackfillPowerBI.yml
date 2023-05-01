@@ -1,14 +1,4 @@
 parameters:
-- name: UpdateTableSchema
-  displayName: Update the Power BI Table schema to the latest schema
-  default: true
-  type: boolean
-
-- name: DeleteAllOrganizationData
-  displayName: Delete all data in the Simeon Power BI dataset
-  default: true
-  type: boolean
-
 - name: BackfillOnlyFailedUploadToPowerBISteps
   displayName: Backfill only failed upload to Power BI steps
   default: false
@@ -53,8 +43,6 @@ jobs:
   steps:
   - template: BackfillPowerBI.yml@Templates
     parameters:
-      UpdateTableSchema: ${{ parameters.UpdateTableSchema }}
-      DeleteAllOrganizationData: ${{ parameters.DeleteAllOrganizationData }}
       InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
       BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.BackfillOnlyFailedUploadToPowerBISteps }}
       BackfillHours: ${{ parameters.BackfillHours }}
