@@ -46,7 +46,7 @@ jobs:
 - job: Job
   timeoutInMinutes: 600
   steps:
-  - template: BackfillPowerBI.yml@Templates
+  - template: BackfillSyncIntegrations.yml@Templates
     parameters:
       InstallPowerBIReport: ${{ parameters.InstallPowerBIReport }}
       BackfillOnlyFailedUploadToPowerBISteps: ${{ parameters.BackfillOnlyFailedUploadToPowerBISteps }}
